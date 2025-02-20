@@ -2,6 +2,8 @@
 
 
 import javax.swing.*;
+
+import ui.LoginFrame;
 import ui.MainFrame;
 
 public class  Main {
@@ -14,8 +16,8 @@ public class  Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
+            LoginFrame login = new LoginFrame();
+            login.setVisible(true);
         });
     }
 }
