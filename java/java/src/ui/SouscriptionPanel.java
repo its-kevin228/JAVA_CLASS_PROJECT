@@ -1,4 +1,3 @@
-// SouscriptionPanel.java
 package ui;
 
 import dao.AbonneDAO;
@@ -9,7 +8,9 @@ import models.Abonnement;
 import models.Souscription;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -27,39 +28,81 @@ public class SouscriptionPanel extends JPanel {
         abonneDAO = new AbonneDAO();
         abonnementDAO = new AbonnementDAO();
         setLayout(new BorderLayout(10, 10));
+        setBackground(new Color(245, 245, 250));
 
-        // Formulaire
+        JPanel formPanel = initFormPanel();
+        JScrollPane scrollPane = new JScrollPane(initTable());
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        add(formPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
+        rafraichirComboBox();
+        rafraichirTable();
+    }
+
+    private JPanel initFormPanel() {
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        formPanel.setBackground(new Color(240, 240, 245));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Sélection de l'abonné
+        // Style personnalisé pour les labels
+        JLabel abonneLabel = createStyledLabel("Abonné:");
+        JLabel abonnementLabel = createStyledLabel("Abonnement:");
+
+        // Abonné
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Abonné:"), gbc);
+        formPanel.add(abonneLabel, gbc);
         gbc.gridx = 1;
-        abonneCombo = new JComboBox<>();
+        abonneCombo = createStyledComboBox();
         formPanel.add(abonneCombo, gbc);
 
-        // Sélection de l'abonnement
+        // Abonnement
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Abonnement:"), gbc);
+        formPanel.add(abonnementLabel, gbc);
         gbc.gridx = 1;
-        abonnementCombo = new JComboBox<>();
+        abonnementCombo = createStyledComboBox();
         formPanel.add(abonnementCombo, gbc);
 
-        // Boutons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton souscrireBtn = new JButton("Souscrire");
-        JButton supprimerBtn = new JButton("Supprimer");
+        // Panel des boutons avec nouveau style
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        buttonPanel.setOpaque(false);
+
+        JButton souscrireBtn = createStyledButton("Souscrire", new Color(46, 204, 113));
+        JButton supprimerBtn = createStyledButton("Supprimer", new Color(231, 76, 60));
+        JButton rafraichirBtn = createStyledButton("Rafraîchir", new Color(52, 152, 219));
+
         buttonPanel.add(souscrireBtn);
         buttonPanel.add(supprimerBtn);
+        buttonPanel.add(rafraichirBtn);
 
         gbc.gridx = 0; gbc.gridy = 2;
         gbc.gridwidth = 2;
         formPanel.add(buttonPanel, gbc);
 
-        // Table
+        // Ajout des actions avec effets d'animation
+        souscrireBtn.addActionListener(e -> {
+            animateButton(souscrireBtn);
+            souscrire();
+        });
+
+        supprimerBtn.addActionListener(e -> {
+            animateButton(supprimerBtn);
+            supprimerSouscription();
+        });
+
+        rafraichirBtn.addActionListener(e -> {
+            animateButton(rafraichirBtn);
+            rafraichirTable();
+        });
+
+        return formPanel;
+    }
+
+    private JTable initTable() {
         String[] columnNames = {"ID", "Abonné", "Abonnement", "Date début", "Date fin"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -68,19 +111,94 @@ public class SouscriptionPanel extends JPanel {
             }
         };
         table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
 
-        // Layout
-        add(formPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        // Style de la table
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        table.setSelectionBackground(new Color(52, 152, 219, 100));
+        table.setSelectionForeground(Color.BLACK);
+        table.setShowGrid(true);
+        table.setGridColor(new Color(189, 195, 199));
 
-        // Events
-        souscrireBtn.addActionListener(e -> souscrire());
-        supprimerBtn.addActionListener(e -> supprimerSouscription());
+        // Style de l'en-tête
+        JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Arial", Font.BOLD, 13));
+        header.setBackground(new Color(52, 73, 94));
+        header.setForeground(Color.WHITE);
+        header.setPreferredSize(new Dimension(header.getWidth(), 35));
 
-        // Chargement initial des données
-        rafraichirComboBox();
-        rafraichirTable();
+        return table;
+    }
+
+    private JLabel createStyledLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setForeground(new Color(44, 62, 80));
+        return label;
+    }
+
+    private JComboBox createStyledComboBox() {
+        JComboBox comboBox = new JComboBox();
+        comboBox.setFont(new Font("Arial", Font.PLAIN, 14));
+        comboBox.setBackground(Color.WHITE);
+        comboBox.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
+        comboBox.setPreferredSize(new Dimension(200, 30));
+        return comboBox;
+    }
+
+    private JButton createStyledButton(String text, Color backgroundColor) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(backgroundColor);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(120, 40));
+
+        // Effet de survol
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setFont(new Font("Arial", Font.BOLD, 15));
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setFont(new Font("Arial", Font.BOLD, 14));
+            }
+        });
+
+        return button;
+    }
+
+    private void animateButton(JButton button) {
+        Timer timer = new Timer(50, null);
+        final int[] frame = {0};
+
+        timer.addActionListener(e -> {
+            if (frame[0] < 5) {
+                button.setSize(button.getWidth() - 2, button.getHeight() - 2);
+                frame[0]++;
+            } else if (frame[0] < 10) {
+                button.setSize(button.getWidth() + 2, button.getHeight() + 2);
+                frame[0]++;
+            } else {
+                timer.stop();
+            }
+            button.revalidate();
+        });
+
+        timer.start();
     }
 
     private void rafraichirComboBox() {
@@ -103,44 +221,47 @@ public class SouscriptionPanel extends JPanel {
         Abonnement abonnement = (Abonnement) abonnementCombo.getSelectedItem();
 
         if (abonne == null || abonnement == null) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner un abonné et un abonnement",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            showStyledMessage("Veuillez sélectionner un abonné et un abonnement", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         Souscription souscription = new Souscription(abonne.getId(), abonnement.getId(), new Date());
-
         if (souscriptionDAO.create(souscription)) {
-            JOptionPane.showMessageDialog(this, "Souscription effectuée avec succès");
+            showStyledMessage("Souscription effectuée avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
             rafraichirTable();
         } else {
-            JOptionPane.showMessageDialog(this, "Erreur lors de la souscription",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            showStyledMessage("Erreur lors de la souscription", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void supprimerSouscription() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une souscription",
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+            showStyledMessage("Veuillez sélectionner une souscription", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         int id = (Integer) table.getValueAt(selectedRow, 0);
+
+        UIManager.put("OptionPane.yesButtonText", "Oui");
+        UIManager.put("OptionPane.noButtonText", "Non");
+
         int confirmation = JOptionPane.showConfirmDialog(this,
                 "Êtes-vous sûr de vouloir supprimer cette souscription ?",
                 "Confirmation", JOptionPane.YES_NO_OPTION);
-
         if (confirmation == JOptionPane.YES_OPTION) {
             if (souscriptionDAO.delete(id)) {
-                JOptionPane.showMessageDialog(this, "Souscription supprimée avec succès");
+                showStyledMessage("Souscription supprimée avec succès", "Succès", JOptionPane.INFORMATION_MESSAGE);
                 rafraichirTable();
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur lors de la suppression",
-                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                showStyledMessage("Erreur lors de la suppression", "Erreur", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void showStyledMessage(String message, String titre, int messageType) {
+        UIManager.put("OptionPane.messageFont", new Font("Arial", Font.PLAIN, 14));
+        UIManager.put("OptionPane.buttonFont", new Font("Arial", Font.BOLD, 12));
+        JOptionPane.showMessageDialog(this, message, titre, messageType);
     }
 
     private void rafraichirTable() {
@@ -149,19 +270,16 @@ public class SouscriptionPanel extends JPanel {
         for (Souscription souscription : souscriptions) {
             Abonne abonne = abonneDAO.read(souscription.getIdAbonne());
             Abonnement abonnement = abonnementDAO.read(souscription.getIdAbonnement());
-            
-            // Calcul de la date de fin
-            java.util.Calendar cal = java.util.Calendar.getInstance();
+            Calendar cal = Calendar.getInstance();
             cal.setTime(souscription.getDateDebut());
-            cal.add(java.util.Calendar.MONTH, abonnement.getDureeMois());
+            cal.add(Calendar.MONTH, abonnement.getDureeMois());
             Date dateFin = cal.getTime();
-
             Object[] row = {
-                souscription.getId(),
-                abonne.getNom() + " " + abonne.getPrenom(),
-                abonnement.getLibelle(),
-                souscription.getDateDebut(),
-                dateFin
+                    souscription.getId(),
+                    abonne.getNom() + " " + abonne.getPrenom(),
+                    abonnement.getLibelle(),
+                    souscription.getDateDebut(),
+                    dateFin
             };
             tableModel.addRow(row);
         }
