@@ -1,23 +1,18 @@
-// Main.java
-
-
+import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.*;
-
+import java.awt.*;
 import ui.LoginFrame;
-import ui.MainFrame;
 
-public class  Main {
+public class Main {
     public static void main(String[] args) {
-        try {
-            // Set Look and Feel
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            System.err.println("Error setting Look and Feel: " + e.getMessage());
-        }
+        // Initialiser FlatLaf
+        FlatLightLaf.setup();
+        // Optionnel : Changer la police par défaut
+        UIManager.put("defaultFont", new Font("Inter", Font.PLAIN, 14));
 
         SwingUtilities.invokeLater(() -> {
-            LoginFrame login = new LoginFrame();
-            login.setVisible(true);
+            // Afficher le LoginFrame en premier
+            new LoginFrame().setVisible(true);
         });
     }
 }

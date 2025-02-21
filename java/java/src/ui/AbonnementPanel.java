@@ -1,5 +1,3 @@
-
-// AbonnementPanel.java
 package ui;
 
 import dao.AbonnementDAO;
@@ -20,48 +18,184 @@ public class AbonnementPanel extends JPanel {
     public AbonnementPanel() {
         abonnementDAO = new AbonnementDAO();
         setLayout(new BorderLayout(10, 10));
-        
-        // Formulaire
+        setBackground(new Color(240, 240, 245));
+
+        JPanel formPanel = initFormPanel();
+        JScrollPane scrollPane = new JScrollPane(initTable());
+
+        // Style de la table
+        table.setRowHeight(25);
+        table.setFont(new Font("Arial", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(52, 152, 219));
+        table.getTableHeader().setForeground(Color.WHITE);
+
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        add(formPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
+        rafraichirTable();
+    }
+
+    private JPanel initFormPanel() {
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        formPanel.setBackground(new Color(240, 240, 245));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Titre
+        JLabel titleLabel = new JLabel("Gestion des Abonnements");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(titleLabel, gbc);
+        gbc.gridwidth = 1;
+
+        // Champs de formulaire avec style
+        JPanel inputPanel = createStyledInputPanel();
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        formPanel.add(inputPanel, gbc);
+
+        // Boutons avec style moderne
+        JPanel buttonPanel = createStyledButtonPanel();
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        formPanel.add(buttonPanel, gbc);
+
+        return formPanel;
+    }
+
+    private JPanel createStyledInputPanel() {
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBackground(new Color(240, 240, 245));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // Style des labels
+        Font labelFont = new Font("Arial", Font.BOLD, 14);
+        Color labelColor = new Color(44, 62, 80);
+
         // Libellé
+        JLabel libelleLabel = new JLabel("Libellé:");
+        libelleLabel.setFont(labelFont);
+        libelleLabel.setForeground(labelColor);
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Libellé:"), gbc);
-        gbc.gridx = 1;
+        inputPanel.add(libelleLabel, gbc);
+
         libelleField = new JTextField(20);
-        formPanel.add(libelleField, gbc);
+        styleTextField(libelleField);
+        gbc.gridx = 1;
+        inputPanel.add(libelleField, gbc);
 
         // Durée
+        JLabel dureeLabel = new JLabel("Durée (mois):");
+        dureeLabel.setFont(labelFont);
+        dureeLabel.setForeground(labelColor);
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Durée (mois):"), gbc);
-        gbc.gridx = 1;
+        inputPanel.add(dureeLabel, gbc);
+
         dureeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 36, 1));
-        formPanel.add(dureeSpinner, gbc);
+        styleSpinner(dureeSpinner);
+        gbc.gridx = 1;
+        inputPanel.add(dureeSpinner, gbc);
 
         // Prix
+        JLabel prixLabel = new JLabel("Prix mensuel:");
+        prixLabel.setFont(labelFont);
+        prixLabel.setForeground(labelColor);
         gbc.gridx = 0; gbc.gridy = 2;
-        formPanel.add(new JLabel("Prix mensuel:"), gbc);
-        gbc.gridx = 1;
-        prixSpinner = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 10.0));
-        formPanel.add(prixSpinner, gbc);
+        inputPanel.add(prixLabel, gbc);
 
-        // Boutons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton ajouterBtn = new JButton("Ajouter");
-        JButton modifierBtn = new JButton("Modifier");
-        JButton supprimerBtn = new JButton("Supprimer");
+        prixSpinner = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10000.0, 10.0));
+        styleSpinner(prixSpinner);
+        gbc.gridx = 1;
+        inputPanel.add(prixSpinner, gbc);
+
+        return inputPanel;
+    }
+
+    private JPanel createStyledButtonPanel() {
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(new Color(240, 240, 245));
+
+        JButton ajouterBtn = createStyledButton("Ajouter", new Color(46, 204, 113));
+        JButton modifierBtn = createStyledButton("Modifier", new Color(52, 152, 219));
+        JButton supprimerBtn = createStyledButton("Supprimer", new Color(231, 76, 60));
+
         buttonPanel.add(ajouterBtn);
         buttonPanel.add(modifierBtn);
         buttonPanel.add(supprimerBtn);
 
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        formPanel.add(buttonPanel, gbc);
+        // Events avec effets d'animation
+        ajouterBtn.addActionListener(e -> {
+            animateButton(ajouterBtn);
+            ajouterAbonnement();
+        });
+        modifierBtn.addActionListener(e -> {
+            animateButton(modifierBtn);
+            modifierAbonnement();
+        });
+        supprimerBtn.addActionListener(e -> {
+            animateButton(supprimerBtn);
+            supprimerAbonnement();
+        });
 
-        // Table
+        return buttonPanel;
+    }
+
+    private JButton createStyledButton(String text, Color backgroundColor) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(120, 40));
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setBackground(backgroundColor);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Effet hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(backgroundColor.brighter());
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(backgroundColor);
+            }
+        });
+
+        return button;
+    }
+
+    private void styleTextField(JTextField textField) {
+        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199)),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+    }
+
+    private void styleSpinner(JSpinner spinner) {
+        spinner.setFont(new Font("Arial", Font.PLAIN, 14));
+        ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField().setBackground(Color.WHITE);
+    }
+
+    private void animateButton(JButton button) {
+        Color originalColor = button.getBackground();
+        button.setBackground(originalColor.brighter());
+        Timer timer = new Timer(100, e -> button.setBackground(originalColor));
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    private JTable initTable() {
         String[] columnNames = {"ID", "Libellé", "Durée (mois)", "Prix mensuel"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
@@ -70,91 +204,95 @@ public class AbonnementPanel extends JPanel {
             }
         };
         table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
 
-        // Layout
-        add(formPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        // Ajout d'un listener pour la sélection
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) {
+                    libelleField.setText(table.getValueAt(selectedRow, 1).toString());
+                    dureeSpinner.setValue(Integer.parseInt(table.getValueAt(selectedRow, 2).toString()));
+                    prixSpinner.setValue(Double.parseDouble(table.getValueAt(selectedRow, 3).toString()));
+                }
+            }
+        });
 
-        // Events
-        ajouterBtn.addActionListener(e -> ajouterAbonnement());
-        modifierBtn.addActionListener(e -> modifierAbonnement());
-        supprimerBtn.addActionListener(e -> supprimerAbonnement());
-        
-        // Chargement initial des données
-        rafraichirTable();
+        return table;
     }
 
     private void ajouterAbonnement() {
         String libelle = libelleField.getText().trim();
         if (libelle.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le libellé est obligatoire", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Le libellé est obligatoire");
             return;
         }
-
         int duree = (Integer) dureeSpinner.getValue();
         double prix = (Double) prixSpinner.getValue();
 
         Abonnement abonnement = new Abonnement(libelle, duree, prix);
         if (abonnementDAO.create(abonnement)) {
-            JOptionPane.showMessageDialog(this, "Abonnement ajouté avec succès");
+            afficherMessageSucces("Abonnement ajouté avec succès");
             rafraichirTable();
             reinitialiserFormulaire();
         } else {
-            JOptionPane.showMessageDialog(this, "Erreur lors de l'ajout", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Erreur lors de l'ajout");
         }
     }
 
     private void modifierAbonnement() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner un abonnement", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Veuillez sélectionner un abonnement");
             return;
         }
-
-        int id = (Integer) table.getValueAt(selectedRow, 0);
         String libelle = libelleField.getText().trim();
         if (libelle.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Le libellé est obligatoire", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Le libellé est obligatoire");
             return;
         }
-
         int duree = (Integer) dureeSpinner.getValue();
         double prix = (Double) prixSpinner.getValue();
+        int id = (Integer) table.getValueAt(selectedRow, 0);
 
         Abonnement abonnement = new Abonnement(libelle, duree, prix);
         abonnement.setId(id);
 
         if (abonnementDAO.update(abonnement)) {
-            JOptionPane.showMessageDialog(this, "Abonnement modifié avec succès");
+            afficherMessageSucces("Abonnement modifié avec succès");
             rafraichirTable();
             reinitialiserFormulaire();
         } else {
-            JOptionPane.showMessageDialog(this, "Erreur lors de la modification", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Erreur lors de la modification");
         }
     }
 
     private void supprimerAbonnement() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Veuillez sélectionner un abonnement", "Erreur", JOptionPane.ERROR_MESSAGE);
+            afficherMessageErreur("Veuillez sélectionner un abonnement");
             return;
         }
-
         int id = (Integer) table.getValueAt(selectedRow, 0);
         int confirmation = JOptionPane.showConfirmDialog(this,
                 "Êtes-vous sûr de vouloir supprimer cet abonnement ?",
                 "Confirmation", JOptionPane.YES_NO_OPTION);
-
         if (confirmation == JOptionPane.YES_OPTION) {
             if (abonnementDAO.delete(id)) {
-                JOptionPane.showMessageDialog(this, "Abonnement supprimé avec succès");
+                afficherMessageSucces("Abonnement supprimé avec succès");
                 rafraichirTable();
                 reinitialiserFormulaire();
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur lors de la suppression", "Erreur", JOptionPane.ERROR_MESSAGE);
+                afficherMessageErreur("Erreur lors de la suppression");
             }
         }
+    }
+
+    private void afficherMessageSucces(String message) {
+        JOptionPane.showMessageDialog(this, message, "Succès", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void afficherMessageErreur(String message) {
+        JOptionPane.showMessageDialog(this, message, "Erreur", JOptionPane.ERROR_MESSAGE);
     }
 
     private void rafraichirTable() {
@@ -162,10 +300,10 @@ public class AbonnementPanel extends JPanel {
         List<Abonnement> abonnements = abonnementDAO.findAll();
         for (Abonnement abonnement : abonnements) {
             Object[] row = {
-                abonnement.getId(),
-                abonnement.getLibelle(),
-                abonnement.getDureeMois(),
-                abonnement.getPrixMensuel()
+                    abonnement.getId(),
+                    abonnement.getLibelle(),
+                    abonnement.getDureeMois(),
+                    abonnement.getPrixMensuel()
             };
             tableModel.addRow(row);
         }
